@@ -10,6 +10,7 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
     const [amount, setAmount] = useState('');
     const [network, setNetwork] = useState('');
     const [plan, setPlan] = useState('');
+    const [iucNumber, setIucNumber] = useState('');
     const [examYear, setExamYear] = useState('');
     const [pin, setPin] = useState('');
     const [loading, setLoading] = useState(false);
@@ -21,7 +22,7 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
     const resetAndClose = () => {
         onClose();
         setTimeout(() => {
-            setStep(1); setPhone(''); setAmount(''); setNetwork(''); setPlan(''); setExamYear(''); setPin(''); setRefId('');
+            setStep(1); setPhone(''); setAmount(''); setNetwork(''); setPlan(''); setExamYear(''); setPin(''); setRefId(''); setIucNumber('');
         }, 300);
     };
 
@@ -75,6 +76,7 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
     const isWallet = serviceName === 'Fund Wallet';
     const isElectricity = serviceName === 'Electricity';
     const isExam = serviceName === 'Exam Pins';
+    const isCableTV = serviceName === 'Cable TV';
 
     const examTypes = [
         { label: 'WAEC Result Checker - ₦3,500', value: '3500', type: 'WAEC' },
@@ -124,6 +126,39 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
             { label: '4GB (SME) - 30 Days - ₦960', value: '960' },
             { label: '5GB (SME) - 30 Days - ₦1200', value: '1200' },
             { label: '10GB (SME) - 30 Days - ₦2400', value: '2400' }
+        ]
+    };
+
+    const cableTVProviders = [
+        { label: 'GoTV', value: 'GoTV', color: '#F59E0B' },
+        { label: 'DSTV', value: 'DSTV', color: '#3B82F6' },
+        { label: 'StarTimes', value: 'StarTimes', color: '#EF4444' }
+    ];
+
+    const cableTVPackages = {
+        'GoTV': [
+            { label: 'GoTV Smallie - 1 Month - ₦1,575', value: '1575', plan: 'GoTV Smallie' },
+            { label: 'GoTV Jinja - 1 Month - ₦2,700', value: '2700', plan: 'GoTV Jinja' },
+            { label: 'GoTV Jolli - 1 Month - ₦4,150', value: '4150', plan: 'GoTV Jolli' },
+            { label: 'GoTV Max - 1 Month - ₦5,500', value: '5500', plan: 'GoTV Max' },
+            { label: 'GoTV Supa - 1 Month - ₦6,400', value: '6400', plan: 'GoTV Supa' },
+            { label: 'GoTV Supa Plus - 1 Month - ₦7,200', value: '7200', plan: 'GoTV Supa Plus' },
+        ],
+        'DSTV': [
+            { label: 'DStv Padi - 1 Month - ₦3,000', value: '3000', plan: 'DStv Padi' },
+            { label: 'DStv Yanga - 1 Month - ₦4,615', value: '4615', plan: 'DStv Yanga' },
+            { label: 'DStv Confam - 1 Month - ₦7,900', value: '7900', plan: 'DStv Confam' },
+            { label: 'DStv Compact - 1 Month - ₦15,700', value: '15700', plan: 'DStv Compact' },
+            { label: 'DStv Compact Plus - 1 Month - ₦24,900', value: '24900', plan: 'DStv Compact Plus' },
+            { label: 'DStv Premium - 1 Month - ₦37,000', value: '37000', plan: 'DStv Premium' },
+        ],
+        'StarTimes': [
+            { label: 'Nova - 1 Month - ₦1,200', value: '1200', plan: 'Nova' },
+            { label: 'Basic - 1 Month - ₦2,200', value: '2200', plan: 'Basic' },
+            { label: 'Smart - 1 Month - ₦2,800', value: '2800', plan: 'Smart' },
+            { label: 'Classic - 1 Month - ₦3,600', value: '3600', plan: 'Classic' },
+            { label: 'Super - 1 Month - ₦5,600', value: '5600', plan: 'Super' },
+            { label: 'Korean - 1 Month - ₦8,500', value: '8500', plan: 'Korean' },
         ]
     };
 
@@ -201,6 +236,125 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
             default: return 'var(--accent-green)';
         }
     };
+
+    const handleCableTVProviderChange = (providerValue) => {
+        setNetwork(providerValue);
+        setPlan('');
+        setAmount('');
+    };
+
+    const handleCableTVPackageChange = (e) => {
+        const selected = cableTVPackages[network]?.find(p => p.value === e.target.value);
+        if (selected) {
+            setPlan(selected.plan);
+            setAmount(selected.value);
+        }
+    };
+
+    const renderCableTVForm = () => (
+        <form onSubmit={submitTransaction} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Provider Selector */}
+            <div>
+                <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Select Provider</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                    {cableTVProviders.map((provider) => (
+                        <button
+                            key={provider.value}
+                            type="button"
+                            onClick={() => handleCableTVProviderChange(provider.value)}
+                            style={{
+                                padding: '0.875rem 0.5rem',
+                                borderRadius: '14px',
+                                background: network === provider.value
+                                    ? `linear-gradient(135deg, ${provider.color}22, ${provider.color}44)`
+                                    : 'rgba(255,255,255,0.04)',
+                                border: `2px solid ${network === provider.value ? provider.color : 'rgba(255,255,255,0.08)'}`,
+                                color: network === provider.value ? 'white' : 'var(--text-secondary)',
+                                fontSize: '0.875rem',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                transition: 'all 0.25s ease',
+                                textAlign: 'center',
+                                fontFamily: 'inherit',
+                                boxShadow: network === provider.value ? `0 4px 14px ${provider.color}33` : 'none',
+                                transform: network === provider.value ? 'scale(1.04)' : 'scale(1)'
+                            }}
+                        >
+                            {provider.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Package Selector */}
+            {network && (
+                <div className="animate-fade-in">
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Select Package</label>
+                    <select
+                        required
+                        value={plan ? cableTVPackages[network]?.find(p => p.plan === plan)?.value || '' : ''}
+                        onChange={handleCableTVPackageChange}
+                        style={{ width: '100%', padding: '0.875rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', outline: 'none', fontSize: '1rem', fontFamily: 'inherit', appearance: 'none', cursor: 'pointer' }}
+                    >
+                        <option value="" disabled style={{ background: '#000', color: '#fff' }}>Select Package</option>
+                        {cableTVPackages[network]?.map((item, idx) => (
+                            <option key={idx} value={item.value} style={{ background: '#111', color: '#fff' }}>{item.label}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
+            {/* IUC Number */}
+            {network && plan && (
+                <div className="animate-fade-in">
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>IUC/Smart Card Number</label>
+                    <input
+                        type="text"
+                        required
+                        value={iucNumber}
+                        onChange={e => setIucNumber(e.target.value.replace(/[^0-9]/g, ''))}
+                        placeholder="Enter your IUC/Smart Card Number"
+                        maxLength={12}
+                        style={{ width: '100%', padding: '0.875rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', outline: 'none', fontSize: '1rem', fontFamily: 'inherit', letterSpacing: '1px' }}
+                    />
+                    <p style={{ margin: '0.375rem 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Enter the number on your decoder or smart card</p>
+                </div>
+            )}
+
+            {/* Summary */}
+            {network && plan && amount && (
+                <div className="animate-fade-in" style={{ background: 'rgba(139, 92, 246, 0.08)', border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: '14px', padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Provider</span>
+                        <strong style={{ fontSize: '0.875rem' }}>{network}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Package</span>
+                        <strong style={{ fontSize: '0.875rem' }}>{plan}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Amount</span>
+                        <strong style={{ fontSize: '0.875rem', color: 'var(--accent-green)' }}>₦{Number(amount).toLocaleString()}</strong>
+                    </div>
+                </div>
+            )}
+
+            <button
+                type="submit"
+                disabled={!network || !plan || !iucNumber || iucNumber.length < 6}
+                style={{
+                    width: '100%', background: 'var(--accent-green)', color: 'white', padding: '1rem', borderRadius: '12px',
+                    border: 'none', fontSize: '1rem', fontWeight: '600', marginTop: '0.5rem',
+                    cursor: (!network || !plan || !iucNumber || iucNumber.length < 6) ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)', fontFamily: 'inherit',
+                    opacity: (!network || !plan || !iucNumber || iucNumber.length < 6) ? 0.5 : 1,
+                    transition: 'opacity 0.2s'
+                }}
+            >
+                Proceed
+            </button>
+        </form>
+    );
 
     const renderServiceForm = () => (
         <form onSubmit={submitTransaction} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -300,14 +454,14 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
                 </div>
             )}
 
-            {(!isWallet && ((isAirtime && network) || (isData && plan) || (isElectricity && plan) || (!isData && !isAirtime && !isElectricity && !isExam))) && (
+            {(!isWallet && !isCableTV && ((isAirtime && network) || (isData && plan) || (isElectricity && plan) || (!isData && !isAirtime && !isElectricity && !isExam))) && (
                 <div className="animate-fade-in">
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{isData || isAirtime ? 'Phone Number' : isElectricity ? 'Meter Number' : 'Account/Meter Identifier'}</label>
                     <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="Enter details..." style={{ width: '100%', padding: '0.875rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', outline: 'none', fontSize: '1rem', fontFamily: 'inherit' }} />
                 </div>
             )}
 
-            {(!isData && !isWallet && !isExam && ((isAirtime && network) || (isElectricity && plan) || (!isData && !isAirtime && !isElectricity))) && (
+            {(!isData && !isWallet && !isExam && !isCableTV && ((isAirtime && network) || (isElectricity && plan) || (!isData && !isAirtime && !isElectricity))) && (
                 <div className="animate-fade-in">
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Amount (₦)</label>
                     <input type="number" required value={amount} onChange={e => setAmount(e.target.value)} placeholder="Min ₦50" style={{ width: '100%', padding: '0.875rem', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', outline: 'none', fontSize: '1rem', fontFamily: 'inherit' }} />
@@ -324,7 +478,8 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
                 width: '100%', background: 'var(--accent-green)', color: 'white', padding: '1rem', borderRadius: '12px',
                 border: 'none', fontSize: '1rem', fontWeight: '600', marginTop: '0.5rem', cursor: (!network && (isData || isAirtime || isElectricity || isExam)) ? 'not-allowed' : 'pointer',
                 boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)', fontFamily: 'inherit',
-                opacity: (!network && (isData || isAirtime || isElectricity || isExam)) ? 0.5 : 1
+                opacity: (!network && (isData || isAirtime || isElectricity || isExam)) ? 0.5 : 1,
+                display: isCableTV ? 'none' : undefined
             }}>
                 Proceed
             </button>
@@ -334,7 +489,9 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
     const renderPinStep = () => (
         <form onSubmit={submitTransaction} className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', alignItems: 'center' }}>
             <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9375rem', margin: '0 0 1rem 0' }}>
-                You are about to process {isData ? 'Data' : serviceName} for <br /><strong style={{ color: 'white', fontSize: '1.125rem' }}>{phone}</strong> at ₦{amount}.<br /><br />Enter your transaction PIN to confirm.
+                You are about to process {isCableTV ? `${network} ${plan}` : isData ? 'Data' : serviceName} for <br />
+                <strong style={{ color: 'white', fontSize: '1.125rem' }}>{isCableTV ? `IUC: ${iucNumber}` : phone}</strong> at ₦{Number(amount).toLocaleString()}.<br /><br />
+                Enter your transaction PIN to confirm.
             </p>
 
             <div>
@@ -413,7 +570,9 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
 
                 {isWallet
                     ? renderFundWallet()
-                    : (step === 1 ? renderServiceForm() : step === 2 ? renderPinStep() : renderSuccessStep())
+                    : isCableTV
+                        ? (step === 1 ? renderCableTVForm() : step === 2 ? renderPinStep() : renderSuccessStep())
+                        : (step === 1 ? renderServiceForm() : step === 2 ? renderPinStep() : renderSuccessStep())
                 }
 
             </div>
