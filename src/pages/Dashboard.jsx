@@ -19,8 +19,8 @@ const Dashboard = () => {
     };
 
     // Defaults for uninitialized mock users
-    const walletBalance = 14500.50;
-    const commission = 250.00;
+    const walletBalance = 0.00;
+    const commission = 0.00;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
