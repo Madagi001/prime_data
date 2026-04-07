@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --world-1: #10b981;
+  /* Emerald */
+  --world-1-glow: rgba(16, 185, 129, 0.2);
+  --world-2: #8b5cf6;
+  /* Violet */
+  --world-2-glow: rgba(139, 92, 246, 0.2);
+  --world-3: #f59e0b;
+  /* Amber */
+  --world-3-glow: rgba(245, 158, 11, 0.2);
+  --world-4: #ef4444;
+  /* Rose */
+  --world-4-glow: rgba(239, 68, 68, 0.2);
+
+  --bg-dark: #0a0a0c;
+  --bg-darker: #050505;
+  --bg-card: rgba(255, 255, 255, 0.02);
+  --text-main: #ffffff;
+  --text-muted: #888891;
+
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(20px);
+
+  --primary: #6366f1;
+  --primary-glow: rgba(99, 102, 241, 0.3);
+
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: var(--text-main);
+  background-color: var(--bg-darker);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+  background: radial-gradient(circle at top center, var(--bg-dark), var(--bg-darker));
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+.font-heading {
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 1.5rem;
+}
+
+.glow-text-1 {
+  text-shadow: 0 0 20px var(--world-1-glow);
+  color: var(--world-1);
+}
+
+.glow-text-2 {
+  text-shadow: 0 0 20px var(--world-2-glow);
+  color: var(--world-2);
+}
+
+.glow-text-3 {
+  text-shadow: 0 0 20px var(--world-3-glow);
+  color: var(--world-3);
+}
+
+.glow-text-4 {
+  text-shadow: 0 0 20px var(--world-4-glow);
+  color: var(--world-4);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#root {
+  width: 100%;
+}
