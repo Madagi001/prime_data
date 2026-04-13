@@ -12,17 +12,26 @@ const Login = () => {
     
     const [biometricAvailable, setBiometricAvailable] = useState(false);
     const [biometricType, setBiometricType] = useState('fingerprint');
+    const [biometricUser, setBiometricUser] = useState('User');
     const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
 
     useEffect(() => {
         const lastEmail = localStorage.getItem('vtu_last_user_email');
         const users = JSON.parse(localStorage.getItem('vtu_users') || '[]');
+        
+        let foundUser = null;
         if (lastEmail) {
-            const foundUser = users.find(u => u.email === lastEmail);
-            if (foundUser && foundUser.biometricType) {
-                setBiometricType(foundUser.biometricType);
-            }
+            foundUser = users.find(u => u.email === lastEmail);
         }
+        if (!foundUser && users.length > 0) {
+            foundUser = users[users.length - 1]; // Fallback to last registered user for demo
+        }
+
+        if (foundUser) {
+            if (foundUser.biometricType) setBiometricType(foundUser.biometricType);
+            setBiometricUser(foundUser.name || 'User');
+        }
+        
         // Unconditionally enable biometric prompt for prototype demonstration
         setBiometricAvailable(true);
     }, []);
@@ -94,7 +103,8 @@ const Login = () => {
                     isOpen={showBiometricPrompt} 
                     onClose={() => setShowBiometricPrompt(false)} 
                     onSuccess={handleBiometricSuccess} 
-                    type={biometricType} 
+                    type={biometricType}
+                    userName={biometricUser}
                 />
                 <p style={{ textAlign: 'center', marginTop: '1.75rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                     Don't have an account? <Link to="/signup" style={{ color: 'var(--accent-green)', textDecoration: 'none', fontWeight: '600' }}>Sign Up</Link>

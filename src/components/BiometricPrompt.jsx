@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Fingerprint, ScanFace, CheckCircle2, X } from 'lucide-react';
 
-const BiometricPrompt = ({ isOpen, onClose, onSuccess, type = 'fingerprint' }) => {
+const BiometricPrompt = ({ isOpen, onClose, onSuccess, type = 'fingerprint', userName = 'User' }) => {
     const [status, setStatus] = useState('idle'); // idle, scanning, success
 
     useEffect(() => {
@@ -105,9 +105,13 @@ const BiometricPrompt = ({ isOpen, onClose, onSuccess, type = 'fingerprint' }) =
                 <p style={{
                     color: status === 'success' ? 'var(--success)' : 'var(--text-secondary)',
                     fontSize: '0.9375rem', fontWeight: '500', transition: 'color 0.3s',
-                    marginTop: '0.5rem'
+                    marginTop: '0.5rem', textAlign: 'center'
                 }}>
-                    {status === 'idle' ? 'Tap sensor to verify' : status === 'scanning' ? 'Scanning...' : 'Verified Successfully'}
+                    {status === 'idle' 
+                        ? `Tap sensor to authenticate as ${userName}` 
+                        : status === 'scanning' 
+                            ? `Identifying ${userName}...` 
+                            : `Welcome back, ${userName}!`}
                 </p>
                 
                 <style dangerouslySetInnerHTML={{
