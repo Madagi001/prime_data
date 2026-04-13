@@ -6,8 +6,8 @@ import { Sun, Moon } from 'lucide-react';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
-import Services from './pages/Services';
-import Pricing from './pages/Pricing';
+import TransactionHistory from './pages/TransactionHistory';
+import PrintPage from './pages/PrintPage';
 import Profile from './pages/Profile';
 import Support from './pages/Support';
 import MainLayout from './components/MainLayout';
@@ -51,8 +51,8 @@ function App() {
         {/* Protected Routes inside MainLayout */}
         <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
-          <Route path="services" element={<Services />} />
-          <Route path="pricing" element={<Pricing />} />
+          <Route path="transactions" element={<TransactionHistory />} />
+          <Route path="print" element={<PrintPage />} />
           <Route path="support" element={<Support />} />
           <Route path="profile" element={<Profile />} />
         </Route>

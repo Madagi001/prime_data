@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Grid, Tag, User, Headphones } from 'lucide-react';
+import { Home, History, Printer, User, Headphones } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const BottomNav = () => {
@@ -8,8 +8,8 @@ const BottomNav = () => {
 
     const navItems = [
         { path: '/', label: 'Home', icon: Home },
-        { path: '/services', label: 'Services', icon: Grid },
-        { path: '/pricing', label: 'Pricing', icon: Tag },
+        { path: '/transactions', label: 'Transactions', icon: History },
+        { path: '/print', label: 'Print', icon: Printer },
         { path: '/support', label: 'Support', icon: Headphones },
         { path: '/profile', label: 'Profile', icon: User },
     ];

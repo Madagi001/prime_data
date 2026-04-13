@@ -20,6 +20,7 @@ export const mockData = {
                 { id: 'a1', name: 'Buy Airtime', icon: 'Phone', color: '#10B981' },
                 { id: 'a2', name: 'Airtime to Cash', icon: 'Repeat', color: '#F59E0B' },
                 { id: 'a3', name: 'Airtime Transfer', icon: 'Send', color: '#6366F1' },
+                { id: 'a4', name: 'Print Recharge Card', icon: 'Printer', color: '#F43F5E', badge: 'New' },
             ]
         },
         {
@@ -48,14 +49,7 @@ export const mockData = {
                 { id: 'r3', name: 'Daily Cashback', icon: 'Coins', color: '#F59E0B' },
             ]
         },
-        {
-            id: 'c6', name: 'Reseller', icon: 'TrendingUp', color: '#14B8A6', desc: 'Business API',
-            services: [
-                { id: 'rs1', name: 'Become Reseller', icon: 'Award', color: '#F59E0B' },
-                { id: 'rs2', name: 'Bulk Purchase', icon: 'Package', color: '#8B5CF6' },
-                { id: 'rs3', name: 'Earnings Board', icon: 'BarChart2', color: '#10B981' },
-            ]
-        },
+
         {
             id: 'c7', name: 'Support', icon: 'LifeBuoy', color: '#9CA3AF', desc: 'Help & FAQ',
             services: [

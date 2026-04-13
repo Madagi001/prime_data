@@ -1,13 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-
+import { Fingerprint, ScanFace } from 'lucide-react';
+import BiometricPrompt from '../components/BiometricPrompt';
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { login } = useAuth();
+    const { login, loginWithBiometric } = useAuth();
     const navigate = useNavigate();
+    
+    const [biometricAvailable, setBiometricAvailable] = useState(false);
+    const [biometricType, setBiometricType] = useState('fingerprint');
+    const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
+
+    useEffect(() => {
+        const lastEmail = localStorage.getItem('vtu_last_user_email');
+        const users = JSON.parse(localStorage.getItem('vtu_users') || '[]');
+        if (lastEmail) {
+            const foundUser = users.find(u => u.email === lastEmail);
+            if (foundUser && foundUser.biometricType) {
+                setBiometricType(foundUser.biometricType);
+            }
+        }
+        // Unconditionally enable biometric prompt for prototype demonstration
+        setBiometricAvailable(true);
+    }, []);
+
+    const handleBiometricSuccess = () => {
+        setShowBiometricPrompt(false);
+        const res = loginWithBiometric();
+        if (res.success) {
+            navigate('/');
+        } else {
+            setError(res.message);
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -54,7 +82,20 @@ const Login = () => {
                     <button type="submit" style={{ width: '100%', background: 'var(--accent-green)', color: 'white', padding: '1rem', borderRadius: '12px', border: 'none', fontSize: '1rem', fontWeight: '600', marginTop: '0.5rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)', fontFamily: 'inherit' }}>
                         Log In
                     </button>
+
+                    {biometricAvailable && (
+                        <button type="button" onClick={() => setShowBiometricPrompt(true)} style={{ width: '100%', background: 'transparent', border: '1px solid var(--accent-green)', color: 'var(--accent-green)', padding: '1rem', borderRadius: '12px', fontSize: '1rem', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            {biometricType === 'fingerprint' ? <Fingerprint size={20} /> : <ScanFace size={20} />}
+                            Log In with {biometricType === 'fingerprint' ? 'Touch ID' : 'Face ID'}
+                        </button>
+                    )}
                 </form>
+                <BiometricPrompt 
+                    isOpen={showBiometricPrompt} 
+                    onClose={() => setShowBiometricPrompt(false)} 
+                    onSuccess={handleBiometricSuccess} 
+                    type={biometricType} 
+                />
                 <p style={{ textAlign: 'center', marginTop: '1.75rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                     Don't have an account? <Link to="/signup" style={{ color: 'var(--accent-green)', textDecoration: 'none', fontWeight: '600' }}>Sign Up</Link>
                 </p>

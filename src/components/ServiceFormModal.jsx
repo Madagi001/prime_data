@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Loader2, Copy, Check } from 'lucide-react';
+import { X, Loader2, Copy, Check, Fingerprint, ScanFace } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import BiometricPrompt from './BiometricPrompt';
 
 const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
     const { user } = useAuth();
@@ -11,18 +12,22 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
     const [network, setNetwork] = useState('');
     const [plan, setPlan] = useState('');
     const [iucNumber, setIucNumber] = useState('');
+    const [denomination, setDenomination] = useState('');
+    const [quantity, setQuantity] = useState(1);
+    const [generatedPins, setGeneratedPins] = useState([]);
     const [examYear, setExamYear] = useState('');
     const [pin, setPin] = useState('');
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [refId, setRefId] = useState('');
+    const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
 
     if (!isOpen) return null;
 
     const resetAndClose = () => {
         onClose();
         setTimeout(() => {
-            setStep(1); setPhone(''); setAmount(''); setNetwork(''); setPlan(''); setExamYear(''); setPin(''); setRefId(''); setIucNumber('');
+            setStep(1); setPhone(''); setAmount(''); setNetwork(''); setPlan(''); setExamYear(''); setPin(''); setRefId(''); setIucNumber(''); setDenomination(''); setQuantity(1); setGeneratedPins([]);
         }, 300);
     };
 
@@ -31,6 +36,45 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
         setCopied(true);
         toast.success('Account number copied!');
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const processPayment = () => {
+        setLoading(true);
+        setTimeout(() => {
+            const newRef = `TRX-${Math.floor(Math.random() * 10000000)}`;
+            setRefId(newRef);
+
+            // Generate mock pins for recharge card
+            if (isPrintCard) {
+                const pins = Array.from({ length: Number(quantity) }, () => ({
+                    pin: Array.from({ length: 4 }, () => Math.floor(1000 + Math.random() * 9000)).join('-'),
+                    serial: `SN${Math.floor(100000000 + Math.random() * 900000000)}`
+                }));
+                setGeneratedPins(pins);
+            }
+
+            const newTx = {
+                id: newRef,
+                userEmail: user?.email || 'guest@example.com',
+                service: serviceName,
+                amount: amount,
+                network: network,
+                phone: phone,
+                date: new Date().toISOString(),
+                status: 'Successful'
+            };
+            const txs = JSON.parse(localStorage.getItem('vtu_transactions') || '[]');
+            txs.unshift(newTx);
+            localStorage.setItem('vtu_transactions', JSON.stringify(txs));
+
+            setLoading(false);
+            setStep(3); // Success Step
+        }, 1500);
+    };
+
+    const handleBiometricSuccess = () => {
+        setShowBiometricPrompt(false);
+        processPayment();
     };
 
     const submitTransaction = (e) => {
@@ -46,28 +90,7 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
                 toast.error('Invalid Transaction PIN');
                 return;
             }
-            setLoading(true);
-            setTimeout(() => {
-                const newRef = `TRX-${Math.floor(Math.random() * 10000000)}`;
-                setRefId(newRef);
-                
-                const newTx = {
-                    id: newRef,
-                    userEmail: user?.email || 'guest@example.com',
-                    service: serviceName,
-                    amount: amount,
-                    network: network,
-                    phone: phone,
-                    date: new Date().toISOString(),
-                    status: 'Successful'
-                };
-                const txs = JSON.parse(localStorage.getItem('vtu_transactions') || '[]');
-                txs.unshift(newTx);
-                localStorage.setItem('vtu_transactions', JSON.stringify(txs));
-
-                setLoading(false);
-                setStep(3); // Success Step
-            }, 1500);
+            processPayment();
         }
     };
 
@@ -77,6 +100,7 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
     const isElectricity = serviceName === 'Electricity';
     const isExam = serviceName === 'Exam Pins';
     const isCableTV = serviceName === 'Cable TV';
+    const isPrintCard = serviceName === 'Print Recharge Card';
 
     const examTypes = [
         { label: 'WAEC Result Checker - ₦3,500', value: '3500', type: 'WAEC' },
@@ -356,6 +380,180 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
         </form>
     );
 
+    // ── RECHARGE CARD DENOMINATONS ─────────────────────────────────
+    const cardDenominations = [100, 200, 500, 1000, 2000, 5000];
+    const cardTotal = denomination && quantity ? Number(denomination) * Number(quantity) : 0;
+
+    const renderPrintCardForm = () => (
+        <form onSubmit={submitTransaction} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+            {/* Network */}
+            <div>
+                <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Select Network</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                    {['MTN', 'Airtel', 'Glo', '9Mobile'].map((net) => {
+                        const netColor = getNetworkColor(net);
+                        return (
+                            <button
+                                key={net}
+                                type="button"
+                                onClick={() => { setNetwork(net); setDenomination(''); setAmount(''); }}
+                                style={{
+                                    padding: '0.75rem 0.25rem',
+                                    borderRadius: '12px',
+                                    background: network === net
+                                        ? netColor
+                                        : 'rgba(255,255,255,0.04)',
+                                    border: `2px solid ${network === net ? netColor : 'rgba(255,255,255,0.08)'}`,
+                                    color: network === net ? 'white' : 'var(--text-secondary)',
+                                    fontSize: '0.75rem', fontWeight: '700', cursor: 'pointer',
+                                    transition: 'all 0.2s ease', textAlign: 'center', fontFamily: 'inherit',
+                                    opacity: network === '' ? 0.9 : network === net ? 1 : 0.35,
+                                    transform: network === net ? 'scale(1.05)' : 'scale(1)'
+                                }}
+                            >
+                                {net}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Denomination */}
+            {network && (
+                <div className="animate-fade-in">
+                    <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Select Denomination</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                        {cardDenominations.map((den) => (
+                            <button
+                                key={den}
+                                type="button"
+                                onClick={() => { setDenomination(String(den)); setAmount(String(den * Number(quantity))); }}
+                                style={{
+                                    padding: '0.75rem 0.5rem',
+                                    borderRadius: '12px',
+                                    background: denomination === String(den)
+                                        ? 'linear-gradient(135deg, rgba(244,63,94,0.3), rgba(244,63,94,0.15))'
+                                        : 'rgba(255,255,255,0.04)',
+                                    border: `2px solid ${denomination === String(den) ? '#F43F5E' : 'rgba(255,255,255,0.08)'}`,
+                                    color: denomination === String(den) ? 'white' : 'var(--text-secondary)',
+                                    fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer',
+                                    transition: 'all 0.2s ease', fontFamily: 'inherit',
+                                    boxShadow: denomination === String(den) ? '0 4px 12px rgba(244,63,94,0.3)' : 'none',
+                                    transform: denomination === String(den) ? 'scale(1.04)' : 'scale(1)'
+                                }}
+                            >
+                                ₦{den.toLocaleString()}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Quantity */}
+            {network && denomination && (
+                <div className="animate-fade-in">
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Quantity <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(1 – 50)</span></label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <button type="button" onClick={() => setQuantity(q => Math.max(1, Number(q) - 1))}
+                            style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '1.25rem', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                        <input
+                            type="number" min="1" max="50" required
+                            value={quantity}
+                            onChange={e => setQuantity(Math.min(50, Math.max(1, Number(e.target.value))))}
+                            style={{ flex: 1, textAlign: 'center', padding: '0.75rem', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', outline: 'none', fontSize: '1.125rem', fontWeight: '700', fontFamily: 'inherit' }}
+                        />
+                        <button type="button" onClick={() => setQuantity(q => Math.min(50, Number(q) + 1))}
+                            style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '1.25rem', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                    </div>
+                </div>
+            )}
+
+            {/* Summary */}
+            {network && denomination && (
+                <div className="animate-fade-in" style={{ background: 'rgba(244,63,94,0.07)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '14px', padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Network</span>
+                        <strong style={{ fontSize: '0.875rem' }}>{network}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Denomination</span>
+                        <strong style={{ fontSize: '0.875rem' }}>₦{Number(denomination).toLocaleString()} each</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Quantity</span>
+                        <strong style={{ fontSize: '0.875rem' }}>{quantity} card{quantity > 1 ? 's' : ''}</strong>
+                    </div>
+                    <div style={{ height: '1px', background: 'rgba(244,63,94,0.15)', margin: '0.5rem 0' }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: '600' }}>Total Cost</span>
+                        <strong style={{ fontSize: '1rem', color: '#F43F5E' }}>₦{cardTotal.toLocaleString()}</strong>
+                    </div>
+                </div>
+            )}
+
+            <button
+                type="submit"
+                disabled={!network || !denomination || !quantity}
+                style={{
+                    width: '100%', background: '#F43F5E', color: 'white', padding: '1rem', borderRadius: '12px',
+                    border: 'none', fontSize: '1rem', fontWeight: '600', marginTop: '0.25rem',
+                    cursor: (!network || !denomination || !quantity) ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 15px rgba(244,63,94,0.35)', fontFamily: 'inherit',
+                    opacity: (!network || !denomination || !quantity) ? 0.45 : 1,
+                    transition: 'opacity 0.2s'
+                }}
+                onClick={() => setAmount(String(cardTotal))}
+            >
+                Proceed to Pay ₦{cardTotal > 0 ? cardTotal.toLocaleString() : '—'}
+            </button>
+        </form>
+    );
+
+    const renderPrintCardSuccess = () => (
+        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--success)', boxShadow: '0 0 20px rgba(16,185,129,0.2)' }}>
+                    <Check size={28} color="var(--success)" />
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: '700', margin: '0 0 0.25rem 0' }}>Cards Generated!</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem', margin: 0 }}>{quantity} × ₦{Number(denomination).toLocaleString()} {network} recharge card{quantity > 1 ? 's' : ''}</p>
+                </div>
+            </div>
+
+            <div style={{ maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingRight: '2px' }}>
+                {generatedPins.map((item, idx) => (
+                    <div key={idx} style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)', borderRadius: '10px', padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <p style={{ margin: '0 0 0.2rem 0', fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Serial No.</p>
+                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>{item.serial}</p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <p style={{ margin: '0 0 0.2rem 0', fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>PIN</p>
+                            <p style={{ margin: 0, fontSize: '1rem', fontWeight: '800', letterSpacing: '2px', color: 'var(--accent-green)', fontFamily: 'monospace' }}>{item.pin}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                    onClick={() => window.print()}
+                    style={{ flex: 1, background: 'rgba(244,63,94,0.15)', color: '#F43F5E', border: '1px solid rgba(244,63,94,0.3)', padding: '0.875rem', borderRadius: '12px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                    🖨 Print Cards
+                </button>
+                <button
+                    onClick={resetAndClose}
+                    style={{ flex: 1, background: 'var(--text-primary)', color: 'var(--bg-primary)', border: 'none', padding: '0.875rem', borderRadius: '12px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                    Done
+                </button>
+            </div>
+        </div>
+    );
+
     const renderServiceForm = () => (
         <form onSubmit={submitTransaction} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {(isData || isAirtime) && (
@@ -494,11 +692,27 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
                 Enter your transaction PIN to confirm.
             </p>
 
+            {user?.biometricEnabled ? (
+                <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button type="button" onClick={() => setShowBiometricPrompt(true)} style={{
+                        width: '100%', background: 'transparent', border: '1px solid var(--accent-green)', color: 'var(--accent-green)', padding: '1rem', borderRadius: '12px', fontSize: '1rem', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', fontFamily: 'inherit'
+                    }}>
+                        {user.biometricType === 'fingerprint' ? <Fingerprint size={20} /> : <ScanFace size={20} />}
+                        Pay with {user.biometricType === 'fingerprint' ? 'Touch ID' : 'Face ID'}
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '0.5rem 0' }}>
+                        <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>OR ENTER PIN</span>
+                        <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                    </div>
+                </div>
+            ) : null}
+
             <div>
                 <input
                     type="password"
                     maxLength="4"
-                    required
+                    required={!user?.biometricEnabled}
                     value={pin}
                     onChange={e => setPin(e.target.value.replace(/[^0-9]/g, ''))}
                     placeholder="* * * *"
@@ -572,8 +786,17 @@ const ServiceFormModal = ({ isOpen, onClose, serviceName }) => {
                     ? renderFundWallet()
                     : isCableTV
                         ? (step === 1 ? renderCableTVForm() : step === 2 ? renderPinStep() : renderSuccessStep())
-                        : (step === 1 ? renderServiceForm() : step === 2 ? renderPinStep() : renderSuccessStep())
+                        : isPrintCard
+                            ? (step === 1 ? renderPrintCardForm() : step === 2 ? renderPinStep() : renderPrintCardSuccess())
+                            : (step === 1 ? renderServiceForm() : step === 2 ? renderPinStep() : renderSuccessStep())
                 }
+
+                <BiometricPrompt 
+                    isOpen={showBiometricPrompt} 
+                    onClose={() => setShowBiometricPrompt(false)} 
+                    onSuccess={handleBiometricSuccess} 
+                    type={user?.biometricType || 'fingerprint'} 
+                />
 
             </div>
             <style dangerouslySetInnerHTML={{
